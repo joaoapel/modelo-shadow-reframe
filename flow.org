@@ -1,0 +1,290 @@
+#+TITLE: Criando e configurando Shadow CLJS
+#+PROPERTY: :exports both
+
+* Conectando Shadow CLJS no terminal
+- SPC m C: cider connect cljs
+- selecionar localhost com a porta 9000
+- selecionar shadow
+- selecionar a build :app
+
+
+* Criando as pastas e documentos
+Primeiramente iniciamos um projeto node com o comando abaixo:
+
+#+begin_src sh
+yarn init -y
+#+end_src
+
+#+RESULTS:
+| yarn    | init  | v1.19.1      |
+| success | Saved | package.json |
+| Done    | in    | 0.03s.       |
+
+Com esse comando a pasta =package.json= é criada:
+
+#+begin_src sh
+ls
+#+end_src
+
+#+RESULTS:
+| flow.org     |
+| package.json |
+
+Então criamos a pasta onde ficará o source do nosso código:
+
+#+begin_src shell
+mkdir -p src/cljs/app
+#+end_src
+
+#+RESULTS:
+
+E colocamos o inicio da código:
+
+#+begin_src clojure :tangle ./src/cljs/app/core.cljs
+
+(ns app.core)
+
+(defn ^export init []
+ (js/console.log "Oi mundo" ))
+
+#+end_src
+
+#+RESULTS:
+: Please reevaluate when nREPL is connected
+
+Depois criamos uma pasta onde ficarão as configurações da biblioteca =shadow.cljs=:
+
+
+No arquivo shadow-cljs.edn configuramos com os seguintes parâmetros:
+
+- :source-paths is where you put source code
+- :dependencies is ClojureScript deps of this projects
+- :builds is where you specify build configurations
+- :app is a build id named by us, we will need it to run specific compilations from command line tools or from APIs
+- :output-dir decides where the generated files are saved
+- :asset-path is the base path of files of the hot updated code
+- :target is short for “compilation target”, :browser is for browser apps
+- :modules specifies the modules we want to generate, :main also means the bundle will be named main.js
+- :init-fn specifies the main function of the whole program
+- :devtools specifies configurations for development tools
+- :dev-http tells shadow-cljs to serve the folder target/ on port 8080.
+
+- :main vai ser o nome do JavaScript compilado
+- :devtools :http-root onde os arquivos da build e o arquivo html fica,
+
+
+#+begin_src sh
+mkdir -p resources/public/js
+#+end_src
+
+#+RESULTS:
+
+
+#+begin_src clojure :tangle ./shadow-cljs.edn
+{:source-paths ["src/cljs"]
+ :nrepl {:port 9000}
+ :dependencies [[cider/cider-nrepl "0.25.5"]]
+ :builds {:app {:target :browser
+                :output-dir "resources/public/js"
+                :modules {:main {:init-fn app.core/init}}
+                :devtools {:http-root "resources/public"
+                           :http-port 3000}}}
+ }
+
+#+end_src
+
+Depois disso adicionamos a biblioteca no projeto Node com o comando:
+
+#+begin_src sh
+yarn add shadow-cljs
+
+#+end_src
+
+#+RESULTS:
+| yarn    | add                | v1.19.1         |             |             |
+| [1/4]   | Resolving          | packages...     |             |             |
+| [2/4]   | Fetching           | packages...     |             |             |
+| [3/4]   | Linking            | dependencies... |             |             |
+| [4/4]   | Building           | fresh           | packages... |             |
+| success | Saved              | 1               | new         | dependency. |
+| info    | Direct             | dependencies    |             |             |
+| └─      | shadow-cljs@2.11.8 |                 |             |             |
+| info    | All                | dependencies    |             |             |
+| └─      | shadow-cljs@2.11.8 |                 |             |             |
+| Done    | in                 | 1.74s.          |             |             |
+
+
+Depois disso no arquivo package.json, adicionar o seguinte código, dentro das chaves, não esquecer de colocar a vírgula no fim do primeiro bloco do JSON:
+
+#+begin_src js
+"scripts": {"start": "shadow-cljs watch app"}
+#+end_src
+
+
+Depois disso adicionamos um arquivo HTML para ser o host do nosso arquivo JS compilado.
+
+#+begin_src html :tangle ./resources/public/index.html
+<!DOCTYPE html>
+
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title >Document</title>
+    </head>
+    <body>
+        <script src="/js/main.js">
+        </script>
+    </body>
+</html>
+#+end_src
+
+
+Depois podemos iniciar o programa com com o script =start= escrito acima:
+
+#+begin_src sh
+yarn start
+#+end_src
+
+
+* Instalando dependencias do react
+#+begin_src shell
+yarn add react react-dom create-react-class
+#+end_src
+
+#+RESULTS:
+| yarn    | add                       | v1.19.1         |             |               |
+| [1/4]   | Resolving                 | packages...     |             |               |
+| [2/4]   | Fetching                  | packages...     |             |               |
+| [3/4]   | Linking                   | dependencies... |             |               |
+| [4/4]   | Building                  | fresh           | packages... |               |
+| success | Saved                     | lockfile.       |             |               |
+| success | Saved                     | 3               | new         | dependencies. |
+| info    | Direct                    | dependencies    |             |               |
+| ├─      | create-react-class@15.7.0 |                 |             |               |
+| ├─      | react-dom@17.0.1          |                 |             |               |
+| └─      | react@17.0.1              |                 |             |               |
+| info    | All                       | dependencies    |             |               |
+| ├─      | create-react-class@15.7.0 |                 |             |               |
+| ├─      | react-dom@17.0.1          |                 |             |               |
+| └─      | react@17.0.1              |                 |             |               |
+| Done    | in                        | 1.75s.          |             |               |
+
+
+* Instalando e configurando tailwind
+Full Stack Clojure Contact Book - [4] Front End Preparation
+https://www.youtube.com/watch?v=Jf94HNmCXyU
+
+- Instalando autoprefixer 9.8.6, postcss e postcss-cli para corrigir bug de compilação do tailwind
+
+#+begin_src shell
+yarn add tailwind onchange autoprefixer postcss postcss-cli
+#+end_src
+
+#+RESULTS:
+| yarn    | add                         | v1.19.1         |             |               |            |              |        |               |         |           |    |      |               |
+| [1/4]   | Resolving                   | packages...     |             |               |            |              |        |               |         |           |    |      |               |
+| [2/4]   | Fetching                    | packages...     |             |               |            |              |        |               |         |           |    |      |               |
+| info    | fsevents@2.1.3:             | The             | platform    | linux         | is         | incompatible | with   | this          | module. |           |    |      |               |
+| info    | fsevents@2.1.3              | is              | an          | optional      | dependency | and          | failed | compatibility | check.  | Excluding | it | from | installation. |
+| [3/4]   | Linking                     | dependencies... |             |               |            |              |        |               |         |           |    |      |               |
+| [4/4]   | Building                    | fresh           | packages... |               |            |              |        |               |         |           |    |      |               |
+| success | Saved                       | lockfile.       |             |               |            |              |        |               |         |           |    |      |               |
+| success | Saved                       | 25              | new         | dependencies. |            |              |        |               |         |           |    |      |               |
+| info    | Direct                      | dependencies    |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | onchange@7.1.0              |                 |             |               |            |              |        |               |         |           |    |      |               |
+| └─      | tailwind@4.0.0              |                 |             |               |            |              |        |               |         |           |    |      |               |
+| info    | All                         | dependencies    |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | @blakeembrey/deque@1.0.5    |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | @blakeembrey/template@1.0.0 |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | anymatch@3.1.1              |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | arg@4.1.3                   |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | binary-extensions@2.1.0     |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | braces@3.0.2                |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | chokidar@3.4.3              |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | cross-spawn@7.0.3           |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | fill-range@7.0.1            |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | glob-parent@5.1.1           |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | ignore@5.1.8                |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | is-binary-path@2.1.0        |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | is-extglob@2.1.1            |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | is-glob@4.0.1               |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | is-number@7.0.0             |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | normalize-path@3.0.0        |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | onchange@7.1.0              |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | path-key@3.1.1              |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | picomatch@2.2.2             |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | readdirp@3.5.0              |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | shebang-command@2.0.0       |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | shebang-regex@3.0.0         |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | tailwind@4.0.0              |                 |             |               |            |              |        |               |         |           |    |      |               |
+| ├─      | to-regex-range@5.0.1        |                 |             |               |            |              |        |               |         |           |    |      |               |
+| └─      | tree-kill@1.2.2             |                 |             |               |            |              |        |               |         |           |    |      |               |
+| Done    | in                          | 13.36s.         |             |               |            |              |        |               |         |           |    |      |               |
+
+- Configurando
+#+begin_src shell
+mkdir -p resources/public/css
+
+#+end_src
+
+#+RESULTS:
+
+Precisamos criar 2 arquivos
+Este primeiro na raiz do arquivo
+#+begin_src js :tangle tailwind.config.js
+
+module.exports = {
+  purge: [],
+  theme: {
+    container: {
+      center: true
+    },
+    extend: {},
+  },
+  variants: {},
+  plugins: [],
+}
+
+#+end_src
+
+Este segundo onde o CSS vai ficar:
+
+#+begin_src css :tangle ./resources/public/css/tailwind.css
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+#+end_src
+
+#+RESULTS:
+: @tailwind base;
+:
+: @tailwind components;
+:
+: @tailwind utilities;
+
+Depois adicionar o seguinte script no package.json:
+
+#+begin_src js
+"build-styles": "tailwind build src/cljs/tailwind.css -o resources/public/css/main.css"
+#+end_src
+
+
+
+* Lispcast: Understandig Reframe
+** 01 Reframe Stack Overview
+- DOM (Document Object Model): API do browser/javascript para mudar os elementos da página, tanto o HTML e quanto os eventos. É difícil manter o estado da aplicação e o DOM sincronizados.
+
+- O React foi criado para lidar com os eventos de forma reativa com o DOM Virtual, e melhorou a forma como lidar com os eventos.
+
+- O Reagent é um wrapper para o React criado para o ClojureScript, usa o Hiccup para gerar HTML. Cria os átomos que dizem quando a view precisa ser renderizada novamente.
+
+- Re-Frame é um framework para aplicações. Ajuda a capturar e manter as intenções do usuário em um único local. Além disso, controla os efeitos que estão fora do DOM (requisições API, falar com bancos de dados).
+** 02 Getting Set Up
+#+begin_src sh
+git clone https://github.com/lispcast/understanding-re-frame.git
+&& cd understanding-re-frame
+&& git checkout -f 001
+#+end_src

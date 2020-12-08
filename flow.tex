@@ -1,0 +1,240 @@
+% Created 2020-12-07 seg 21:23
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\author{John Doe}
+\date{\today}
+\title{Criando e configurando Shadow CLJS}
+\hypersetup{
+ pdfauthor={John Doe},
+ pdftitle={Criando e configurando Shadow CLJS},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 26.3 (Org mode 9.5)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+
+\section{Conectando Shadow CLJS no terminal}
+\label{sec:org474c02a}
+\begin{itemize}
+\item SPC m C: cider connect cljs
+\item selecionar localhost com a porta 9000
+\item selecionar shadow
+\item selecionar a build :app
+\end{itemize}
+
+
+\section{Criando as pastas e documentos}
+\label{sec:orgb65807e}
+Primeiramente iniciamos um projeto node com o comando abaixo:
+
+\begin{verbatim}
+yarn init -y
+\end{verbatim}
+
+Com esse comando a pasta \texttt{package.json} é criada:
+
+\begin{verbatim}
+ls
+\end{verbatim}
+
+Então criamos a pasta onde ficará o source do nosso código:
+
+\begin{verbatim}
+mkdir -p src/cljs/app
+\end{verbatim}
+
+E colocamos o inicio da código:
+
+\begin{verbatim}
+
+(ns app.core)
+
+(defn ^export init []
+ (js/console.log "Oi mundo" ))
+
+\end{verbatim}
+
+Depois criamos uma pasta onde ficarão as configurações da biblioteca \texttt{shadow.cljs}:
+
+
+No arquivo shadow-cljs.edn configuramos com os seguintes parâmetros:
+
+\begin{itemize}
+\item :source-paths is where you put source code
+\item :dependencies is ClojureScript deps of this projects
+\item :builds is where you specify build configurations
+\item :app is a build id named by us, we will need it to run specific compilations from command line tools or from APIs
+\item :output-dir decides where the generated files are saved
+\item :asset-path is the base path of files of the hot updated code
+\item :target is short for “compilation target”, :browser is for browser apps
+\item :modules specifies the modules we want to generate, :main also means the bundle will be named main.js
+\item :init-fn specifies the main function of the whole program
+\item :devtools specifies configurations for development tools
+\item :dev-http tells shadow-cljs to serve the folder target/ on port 8080.
+
+\item :main vai ser o nome do JavaScript compilado
+\item :devtools :http-root onde os arquivos da build e o arquivo html fica,
+\end{itemize}
+
+
+\begin{verbatim}
+mkdir -p resources/public/js
+\end{verbatim}
+
+
+\begin{verbatim}
+{:source-paths ["src/cljs"]
+ :nrepl {:port 9000}
+ :dependencies [[cider/cider-nrepl "0.25.5"]]
+ :builds {:app {:target :browser
+                :output-dir "resources/public/js"
+                :modules {:main {:init-fn app.core/init}}
+                :devtools {:http-root "resources/public"
+                           :http-port 3000}}}
+ }
+
+\end{verbatim}
+
+Depois disso adicionamos a biblioteca no projeto Node com o comando:
+
+\begin{verbatim}
+yarn add shadow-cljs
+
+\end{verbatim}
+
+
+Depois disso no arquivo package.json, adicionar o seguinte código, dentro das chaves, não esquecer de colocar a vírgula no fim do primeiro bloco do JSON:
+
+\begin{verbatim}
+"scripts": {"start": "shadow-cljs watch app"}
+\end{verbatim}
+
+
+Depois disso adicionamos um arquivo HTML para ser o host do nosso arquivo JS compilado.
+
+\begin{verbatim}
+<!DOCTYPE html>
+
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title >Document</title>
+    </head>
+    <body>
+        <script src="/js/main.js">
+        </script>
+    </body>
+</html>
+\end{verbatim}
+
+
+Depois podemos iniciar o programa com com o script \texttt{start} escrito acima:
+
+\begin{verbatim}
+yarn start
+\end{verbatim}
+
+
+\section{Instalando dependencias do react}
+\label{sec:orgd9c320d}
+\begin{verbatim}
+yarn add react react-dom create-react-class
+\end{verbatim}
+
+
+\section{Instalando e configurando tailwind}
+\label{sec:orgcee6bd9}
+Full Stack Clojure Contact Book - [4] Front End Preparation
+\url{https://www.youtube.com/watch?v=Jf94HNmCXyU}
+
+\begin{itemize}
+\item Instalando autoprefixer 9.8.6, postcss e postcss-cli para corrigir bug de compilação do tailwind
+\end{itemize}
+
+\begin{verbatim}
+yarn add tailwind onchange autoprefixer postcss postcss-cli
+\end{verbatim}
+
+\begin{itemize}
+\item Configurando
+\end{itemize}
+\begin{verbatim}
+mkdir -p resources/public/css
+
+\end{verbatim}
+
+Precisamos criar 2 arquivos
+Este primeiro na raiz do arquivo
+\begin{verbatim}
+
+module.exports = {
+  purge: [],
+  theme: {
+    container: {
+      center: true
+    },
+    extend: {},
+  },
+  variants: {},
+  plugins: [],
+}
+
+\end{verbatim}
+
+Este segundo onde o CSS vai ficar:
+
+\begin{verbatim}
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+\end{verbatim}
+
+Depois adicionar o seguinte script no package.json:
+
+\begin{verbatim}
+"build-styles": "tailwind build src/cljs/tailwind.css -o resources/public/css/main.css"
+\end{verbatim}
+
+
+
+\section{Lispcast: Understandig Reframe}
+\label{sec:org3df8718}
+\subsection{01 Reframe Stack Overview}
+\label{sec:org37570a8}
+\begin{itemize}
+\item DOM (Document Object Model): API do browser/javascript para mudar os elementos da página, tanto o HTML e quanto os eventos. É difícil manter o estado da aplicação e o DOM sincronizados.
+
+\item O React foi criado para lidar com os eventos de forma reativa com o DOM Virtual, e melhorou a forma como lidar com os eventos.
+
+\item O Reagent é um wrapper para o React criado para o ClojureScript, usa o Hiccup para gerar HTML. Cria os átomos que dizem quando a view precisa ser renderizada novamente.
+
+\item Re-Frame é um framework para aplicações. Ajuda a capturar e manter as intenções do usuário em um único local. Além disso, controla os efeitos que estão fora do DOM (requisições API, falar com bancos de dados).
+\end{itemize}
+\subsection{02 Getting Set Up}
+\label{sec:orgc30e97d}
+\begin{verbatim}
+git clone https://github.com/lispcast/understanding-re-frame.git
+&& cd understanding-re-frame
+&& git checkout -f 001
+\end{verbatim}
+\end{document}
